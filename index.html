@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan EMI Manager (Cloud Synced)</title>
+    <style>
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #202124
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 16px
+        }
+
+        h1 {
+            margin: 5px 0;
+            font-size: 25px
+        }
+
+        .sub {
+            color: #667085;
+            margin-bottom: 16px
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 16px
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 2px 8px #00000010
+        }
+
+        .card small {
+            display: block;
+            color: #667085
+        }
+
+        .amount {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 5px
+        }
+
+        .total {
+            background: #111827;
+            color: white
+        }
+
+        .total small {
+            color: #d1d5db
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden
+        }
+
+        th,
+        td {
+            padding: 11px 8px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            font-size: 14px
+        }
+
+        th {
+            background: #eef2f7
+        }
+
+        .right {
+            text-align: right
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d0d5dd;
+            border-radius: 7px;
+            font-size: 14px
+        }
+
+        button {
+            border: 0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #111827
+        }
+
+        .danger {
+            background: #fee2e2;
+            color: #991b1b
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 15px 0
+        }
+
+        .section {
+            margin-top: 20px
+        }
+
+        .section h2 {
+            font-size: 19px
+        }
+
+        .due-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0
+        }
+
+        .due-item:last-child {
+            border-bottom: 0
+        }
+
+        .paid-label {
+            font-size: 13px;
+            font-weight: bold;
+            color: #166534;
+            background: #dcfce7;
+            padding: 4px 8px;
+            border-radius: 6px
+        }
+
+        #syncStatus {
+            font-size: 12px;
+            color: #667085;
+            margin-top: 5px;
+            font-style: italic
+        }
+
+        @media(max-width:750px) {
+            .cards {
+                grid-template-columns: repeat(2, 1fr)
+            }
+        }
+
+        @media(max-width:500px) {
+            .cards {
+                grid-template-columns: 1fr
+            }
+
+            .container {
+                padding: 10px
+            }
+
+            th:nth-child(2),
+            td:nth-child(2) {
+                display: none
+            }
+
+            table {
+                font-size: 13px
+            }
+
+            button {
+                padding: 7px 10px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>💰 Loan EMI Manager</h1>
+        <div class="sub">Your live cloud-synced EMI tracker. <span id="syncStatus">Connecting to cloud...</span> <small
+                style="display:inline-block; background:#eef2f7; color:#4b5563; padding:2px 6px; border-radius:4px; font-size:11px; margin-left:6px;">Bin
+                ID: <code id="binIdDisplay"></code></small></div>
+
+        <div class="cards">
+            <div class="card total"><small>This Month Due</small>
+                <div class="amount" id="monthTotalDue">₹0</div>
+            </div>
+            <div class="card"><small>Monthly EMI</small>
+                <div class="amount" id="monthly">₹0</div>
+            </div>
+            <div class="card"><small>Remaining EMI Value</small>
+                <div class="amount" id="remaining">₹0</div>
+            </div>
+            <div class="card"><small>Next Due</small>
+                <div class="amount" id="nextDue" style="font-size:15px">—</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="primary" onclick="addLoan()">＋ Add Loan</button>
+            <button class="secondary" onclick="undoAction()" id="undoBtn" disabled style="opacity:0.5">↩ Undo</button>
+            <button class="secondary" onclick="fetchCloudData()">🔄 Refresh Sync</button>
+            <button class="danger" onclick="resetData()">Reset</button>
+        </div>
+
+        <div class="section">
+            <h2>Loans</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Loan</th>
+                        <th>EMIs Left</th>
+                        <th>EMI</th>
+                        <th>Due</th>
+                        <th>Remaining</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="loanRows"></tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>📅 Money Needed by Due Date</h2>
+            <div id="dueSummary"></div>
+        </div>
+
+        <div class="section">
+            <h2>💵 Money on Hand</h2>
+            <div class="card">
+                <small>Enter how much money you currently have available for EMIs</small>
+                <div style="margin-top:8px"><input id="cash" type="number" min="0" placeholder="e.g. 70000"
+                        oninput="saveCash(false)"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getNpointId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("id")) return urlParams.get("id").trim();
+            if (urlParams.get("bin")) return urlParams.get("bin").trim();
+
+            // Hash support: e.g. #XXXXXXXXXXXXXXXX
+            if (window.location.hash) {
+                const hash = window.location.hash.substring(1).trim();
+                if (hash && /^[a-f0-9]+$/i.test(hash)) return hash;
+            }
+
+            // Path support: e.g. /manage/XXXXXXXXXXXXXXXX
+            const pathParts = window.location.pathname.split('/').filter(Boolean);
+            if (pathParts.length > 0) {
+                const lastPart = pathParts[pathParts.length - 1];
+                if (lastPart !== "index.html" && /^[a-f0-9]{10,}$/i.test(lastPart)) {
+                    return lastPart;
+                }
+            }
+
+            return "XXXXXXXXXXXXXXXX"; // Default fallback ID
+        }
+
+        const NPOINT_ID = getNpointId();
+        const API_URL = "https://api.npoint.io/" + NPOINT_ID;
+
+        const defaultLoans = [
+            { name: "YES Card", remaining: 3, emi: 6836, due: 8, paidStatus: null },
+            { name: "IDFC Card 1", remaining: 2, emi: 5664, due: 8, paidStatus: null },
+            { name: "IDFC Card 2", remaining: 4, emi: 5162, due: 8, paidStatus: null },
+            { name: "IDFC Loan", remaining: 11, emi: 13400, due: 8, paidStatus: null },
+            { name: "Axis Loan", remaining: 7, emi: 22651, due: 10, paidStatus: null },
+            { name: "AXIS Card", remaining: 4, emi: 8203, due: 10, paidStatus: null },
+            { name: "ICICI Card", remaining: 2, emi: 5000, due: 14, paidStatus: null }
+        ];
+
+        let loans = defaultLoans;
+        let cash = 0;
+        let historyStack = [];
+
+        const money = n => "₹" + Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+
+        function fetchCloudData() {
+            if (document.getElementById("binIdDisplay")) {
+                document.getElementById("binIdDisplay").textContent = NPOINT_ID;
+            }
+            document.getElementById("syncStatus").textContent = "Syncing with cloud...";
+
+            // Append timestamp ?t=... and cache: "no-store" to force fresh data from cloud
+            fetch(API_URL + "?t=" + Date.now(), { cache: "no-store" })
+                .then(res => res.json())
+                .then(data => {
+                    if (data && Array.isArray(data.loans)) {
+                        loans = data.loans;
+                        cash = Number(data.cash || 0);
+                        loans.forEach(l => { if (l.paidStatus === undefined) l.paidStatus = null; });
+
+                        // 💡 Save fresh cloud data into local storage
+                        localStorage.setItem("loanEMIData", JSON.stringify(loans));
+                        localStorage.setItem("loanCash", cash);
+                    }
+                    document.getElementById("syncStatus").textContent = "✅ Synced with cloud";
+                    render();
+                })
+                .catch(err => {
+                    document.getElementById("syncStatus").textContent = "⚠️ Offline mode (Using local storage)";
+                    let localData = JSON.parse(localStorage.getItem("loanEMIData") || "null");
+                    if (localData) loans = localData;
+                    cash = Number(localStorage.getItem("loanCash") || 0);
+                    render();
+                });
+        }
+
+
+        function fetchCloudData_old() {
+            document.getElementById("syncStatus").textContent = "Syncing with cloud...";
+            fetch(API_URL)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && Array.isArray(data.loans)) {
+                        loans = data.loans;
+                        cash = Number(data.cash || 0);
+                        loans.forEach(l => { if (l.paidStatus === undefined) l.paidStatus = null; });
+                    }
+                    document.getElementById("syncStatus").textContent = "✅ Synced with cloud";
+                    render();
+                })
+                .catch(err => {
+                    document.getElementById("syncStatus").textContent = "⚠️ Offline mode (Using local storage)";
+                    let localData = JSON.parse(localStorage.getItem("loanEMIData") || "null");
+                    if (localData) loans = localData;
+                    cash = Number(localStorage.getItem("loanCash") || 0);
+                    render();
+                });
+        }
+
+        function save(pushHistory = true) {
+            if (pushHistory) {
+                historyStack.push({ loans: JSON.parse(JSON.stringify(loans)), cash: cash });
+                if (historyStack.length > 20) historyStack.shift();
+            }
+
+            localStorage.setItem("loanEMIData", JSON.stringify(loans));
+            localStorage.setItem("loanCash", cash);
+            updateUndoState();
+            render();
+
+            document.getElementById("syncStatus").textContent = "Saving to cloud...";
+            const payload = { loans: loans, cash: cash };
+            fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+                .then(res => {
+                    document.getElementById("syncStatus").textContent = "✅ Synced with cloud";
+                })
+                .catch(err => {
+                    document.getElementById("syncStatus").textContent = "⚠️ Saved locally (Cloud push failed)";
+                });
+        }
+
+        function updateUndoState() {
+            const btn = document.getElementById("undoBtn");
+            if (historyStack.length > 0) {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = "0.5";
+            }
+        }
+
+        function undoAction() {
+            if (historyStack.length === 0) return;
+            const prevState = historyStack.pop();
+            loans = prevState.loans;
+            cash = prevState.cash;
+            save(false);
+        }
+
+        function saveCash(pushHistory = true) {
+            const val = Number(document.getElementById("cash").value || 0);
+            if (pushHistory && val !== cash) {
+                historyStack.push({ loans: JSON.parse(JSON.stringify(loans)), cash: cash });
+            }
+            cash = val;
+            save(false);
+        }
+
+        function payEmiByOriginalIndex(i) {
+            if (loans[i].remaining <= 0 || loans[i].paidStatus) return;
+            historyStack.push({ loans: JSON.parse(JSON.stringify(loans)), cash: cash });
+
+            cash = Math.max(0, cash - Number(loans[i].emi));
+            loans[i].remaining -= 1;
+
+            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+            loans[i].paidStatus = "Paid : " + new Date().toLocaleDateString('en-GB', options);
+
+            save(false);
+        }
+
+        function render() {
+            document.getElementById("cash").value = cash || "";
+            const monthly = loans.reduce((s, l) => s + Number(l.emi || 0), 0);
+            const rem = loans.reduce((s, l) => s + Number(l.emi || 0) * Number(l.remaining || 0), 0);
+
+            document.getElementById("monthly").textContent = money(monthly);
+            document.getElementById("remaining").textContent = money(rem);
+
+            let monthTotalDue = 0;
+            loans.forEach(l => {
+                if (l.remaining > 0 && !l.paidStatus) {
+                    monthTotalDue += Number(l.emi);
+                }
+            });
+            document.getElementById("monthTotalDue").textContent = money(monthTotalDue);
+
+            const unpaidFuture = loans.filter(l => l.remaining > 0 && !l.paidStatus).sort((a, b) => a.due - b.due);
+            const next = unpaidFuture[0];
+            document.getElementById("nextDue").textContent = next ? `${money(next.emi)} on ${next.due}th` : "All paid 🎉";
+
+            renderLoans();
+            renderDue();
+        }
+
+        function renderLoans() {
+            document.getElementById("loanRows").innerHTML = loans.map((l, i) => `
+  <tr>
+  <td><input value="${esc(l.name)}" onchange="edit(${i},'name',this.value)"></td>
+  <td><input type="number" min="0" value="${l.remaining}" onchange="edit(${i},'remaining',this.value)"></td>
+  <td><input type="number" min="0" value="${l.emi}" onchange="edit(${i},'emi',this.value)"></td>
+  <td><input type="number" min="1" max="31" value="${l.due}" onchange="edit(${i},'due',this.value)"></td>
+  <td>${money(l.emi * l.remaining)}</td>
+  <td><button class="danger" title="Delete Loan" onclick="removeLoan(${i})">×</button></td>
+  </tr>`).join("");
+        }
+
+        function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+
+        function edit(i, k, v) {
+            historyStack.push({ loans: JSON.parse(JSON.stringify(loans)), cash: cash });
+            loans[i][k] = (k === "name" ? v : Number(v));
+            save(false);
+        }
+
+        function addLoan() {
+            historyStack.push({ loans: JSON.parse(JSON.stringify(loans)), cash: cash });
+            loans.push({ name: "New Loan", remaining: 1, emi: 0, due: 1, paidStatus: null });
+            save(false);
+        }
+
+        function removeLoan(i) {
+            if (confirm("Delete this loan?")) {
+                historyStack.push({ loans: JSON.parse(JSON.stringify(loans)), cash: cash });
+                loans.splice(i, 1);
+                save(false);
+            }
+        }
+
+        function renderDue() {
+            const groups = {};
+            loans.forEach((l, originalIndex) => {
+                if (l.remaining > 0) {
+                    if (!groups[l.due]) groups[l.due] = { total: 0, items: [] };
+                    groups[l.due].total += Number(l.emi);
+                    groups[l.due].items.push({ name: l.name, emi: l.emi, index: originalIndex, paidStatus: l.paidStatus });
+                }
+            });
+
+            const sortedDueDays = Object.keys(groups).sort((a, b) => a - b);
+
+            document.getElementById("dueSummary").innerHTML = sortedDueDays.map(d => {
+                const group = groups[d];
+                const suffix = (d == 8 || d == 11 || d == 12) ? 'th' : (d % 10 == 1) ? 'st' : (d % 10 == 2) ? 'nd' : (d % 10 == 3) ? 'rd' : 'th';
+
+                const itemsHtml = group.items.map(item => {
+                    const actionElement = item.paidStatus
+                        ? `<span class="paid-label">${item.paidStatus}</span>`
+                        : `<button class="success" onclick="payEmiByOriginalIndex(${item.index})">✔ Paid</button>`;
+
+                    return `
+        <div class="due-item">
+          <div>
+            <strong>${esc(item.name)}</strong>: <span style="color:#2563eb">${money(item.emi)}</span>
+          </div>
+          <div>${actionElement}</div>
+        </div>
+      `;
+                }).join("");
+
+                return `
+      <div class="card" style="margin-bottom:9px">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:6px; margin-bottom:6px;">
+          <b>Due Date: ${d}${suffix}</b>
+          <span style="font-weight:bold; color:#111827">Total: ${money(group.total)}</span>
+        </div>
+        <div>${itemsHtml}</div>
+      </div>
+    `;
+            }).join("") || '<div class="card">No active loans.</div>';
+        }
+
+        function resetData() {
+            if (confirm("Reset all data to your original 7 loans?")) {
+                historyStack.push({ loans: JSON.parse(JSON.stringify(loans)), cash: cash });
+                loans = defaultLoans.map(x => ({ ...x }));
+                cash = 0;
+                save(false);
+            }
+        }
+
+        fetchCloudData();
+    </script>
+</body>
+
+</html>
