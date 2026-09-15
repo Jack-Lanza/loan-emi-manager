@@ -1,10 +1,14 @@
-const CACHE_NAME = 'emicycle-v5';
+const CACHE_NAME = 'emicycle-v7';
 const ASSETS_TO_CACHE = [
+  './',
   'index.html',
   'manifest.json',
   'assets/css/style.css',
   'assets/js/app.js',
   'assets/js/pwa.js',
+  'assets/images/icon-192.png',
+  'assets/images/icon-512.png',
+  'assets/images/icon-maskable.png',
   'assets/images/EMICycle-logo.png',
   'assets/images/EMICycle-favicon.ico'
 ];

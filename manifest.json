@@ -1,29 +1,38 @@
 {
+  "id": "emicycle-pwa",
   "name": "EMICycle",
   "short_name": "EMICycle",
-  "description": "EMI Tracker",
-  "start_url": "./index.html",
+  "description": "Smart EMI & Loan Management Tracker",
+  "start_url": "index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#f8fafc",
+  "background_color": "#0f172a",
   "theme_color": "#4f46e5",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "assets/images/EMICycle-logo.png",
-      "sizes": "192x192 512x512",
+      "src": "assets/images/icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "EMICycle-logo.png",
-      "sizes": "192x192 512x512",
+      "src": "assets/images/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "assets/images/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "assets/images/EMICycle-favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     }
-  ]
+  ],
+  "categories": ["finance", "productivity", "utilities"]
 }
