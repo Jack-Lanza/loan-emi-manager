@@ -384,6 +384,43 @@ function payEmiByOriginalIndex(i) {
     showToast(`<i class="fa-solid fa-circle-check"></i> Marked ₹${Number(emiAmount).toLocaleString('en-IN')} as paid for ${esc(loanName)}`, "success");
 }
 
+// Tab Switching Navigation
+let activeTab = 'due';
+
+function switchTab(tabName) {
+    if (tabName !== 'due' && tabName !== 'loans') return;
+    activeTab = tabName;
+
+    const dueBtn = document.getElementById("tabBtnDue");
+    const loansBtn = document.getElementById("tabBtnLoans");
+    const duePane = document.getElementById("dueSchedulePane");
+    const loansPane = document.getElementById("myLoansPane");
+
+    if (tabName === 'due') {
+        if (dueBtn) {
+            dueBtn.classList.add("active");
+            dueBtn.setAttribute("aria-selected", "true");
+        }
+        if (loansBtn) {
+            loansBtn.classList.remove("active");
+            loansBtn.setAttribute("aria-selected", "false");
+        }
+        if (duePane) duePane.style.display = "block";
+        if (loansPane) loansPane.style.display = "none";
+    } else {
+        if (loansBtn) {
+            loansBtn.classList.add("active");
+            loansBtn.setAttribute("aria-selected", "true");
+        }
+        if (dueBtn) {
+            dueBtn.classList.remove("active");
+            dueBtn.setAttribute("aria-selected", "false");
+        }
+        if (loansPane) loansPane.style.display = "block";
+        if (duePane) duePane.style.display = "none";
+    }
+}
+
 // Main Render Function
 function render() {
     const monthly = loans.reduce((s, l) => s + Number(l.emi || 0), 0);
@@ -403,6 +440,14 @@ function render() {
     const unpaidFuture = loans.filter(l => l.remaining > 0 && !l.paidStatus).sort((a, b) => a.due - b.due);
     const next = unpaidFuture[0];
     document.getElementById("nextDue").textContent = (unpaidFuture.length > 0 && next) ? formatNextDue(next.emi, next.due) : "All Paid";
+
+    // Update Live Tab Badges
+    const unpaidDuesCount = loans.filter(l => l.remaining > 0 && !l.paidStatus).length;
+    const dueBadge = document.getElementById("dueTabBadge");
+    if (dueBadge) dueBadge.textContent = unpaidDuesCount;
+
+    const loansBadge = document.getElementById("loansTabBadge");
+    if (loansBadge) loansBadge.textContent = loans.length;
 
     renderDue();
     renderLoans();

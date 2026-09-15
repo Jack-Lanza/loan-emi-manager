@@ -89,20 +89,38 @@
                 <button class="btn btn-danger" onclick="resetData()"><i class="fa-solid fa-trash-can"></i>
                     Clear</button>
             </nav>
+
+            <!-- View Tabs: Due Schedule & My Loans -->
+            <div class="view-tabs" role="tablist" aria-label="Content Views">
+                <button type="button" class="tab-btn active" id="tabBtnDue" role="tab" aria-selected="true"
+                    aria-controls="dueSchedulePane" onclick="switchTab('due')">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <span>Due Schedule</span>
+                    <span class="tab-badge" id="dueTabBadge">0</span>
+                </button>
+                <button type="button" class="tab-btn" id="tabBtnLoans" role="tab" aria-selected="false"
+                    aria-controls="myLoansPane" onclick="switchTab('loans')">
+                    <i class="fa-solid fa-building-columns"></i>
+                    <span>My Loans</span>
+                    <span class="tab-badge" id="loansTabBadge">0</span>
+                </button>
+            </div>
         </div>
 
         <!-- Toast Notification Container -->
         <div id="toastContainer" class="toast-container"></div>
 
-        <!-- Scrollable Main Content: Due Schedule & My Loans -->
+        <!-- Scrollable Main Content: Due Schedule & My Loans Tab Panes -->
         <main class="scrollable-content">
-            <!-- Due Timeline Section -->
-            <div class="section-title"><i class="fa-regular fa-calendar-days"></i> Due Schedule</div>
-            <div id="dueSummary"></div>
+            <!-- Due Schedule Tab Pane -->
+            <section id="dueSchedulePane" class="tab-pane active" role="tabpanel" aria-labelledby="tabBtnDue">
+                <div id="dueSummary"></div>
+            </section>
 
-            <!-- Manage Loans Section -->
-            <div class="section-title"><i class="fa-solid fa-building-columns"></i> My Loans</div>
-            <div id="loanCards"></div>
+            <!-- My Loans Tab Pane -->
+            <section id="myLoansPane" class="tab-pane" role="tabpanel" aria-labelledby="tabBtnLoans" style="display: none;">
+                <div id="loanCards"></div>
+            </section>
         </main>
     </div>
 

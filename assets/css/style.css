@@ -365,10 +365,93 @@ body {
     background: #fee2e2;
 }
 
-/* Scrollable Content Zone */
+/* Segmented View Tabs (Due Schedule vs My Loans) */
+.view-tabs {
+    display: flex;
+    gap: 4px;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 12px;
+    margin-top: 8px;
+    margin-bottom: 2px;
+    border: 1px solid var(--border);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 8px 10px;
+    font-weight: 700;
+    font-size: 12.5px;
+    border-radius: 9px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.tab-btn:hover {
+    color: var(--text);
+}
+
+.tab-btn:active {
+    transform: scale(0.98);
+}
+
+.tab-btn.active {
+    background: #ffffff;
+    color: var(--primary);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    font-weight: 800;
+}
+
+.tab-btn.active i {
+    color: var(--primary);
+}
+
+.tab-badge {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: #e2e8f0;
+    color: #475569;
+    min-width: 18px;
+    text-align: center;
+    transition: all 0.2s ease;
+    line-height: 1.4;
+}
+
+.tab-btn.active .tab-badge {
+    background: #e0e7ff;
+    color: var(--primary);
+}
+
+/* Scrollable Content Zone & Tab Panes */
 .scrollable-content {
     flex: 1;
-    padding: 6px 16px max(32px, env(safe-area-inset-bottom, 32px)) 16px;
+    padding: 10px 16px max(32px, env(safe-area-inset-bottom, 32px)) 16px;
+}
+
+.tab-pane {
+    animation: tabFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tabFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Section Title */
@@ -376,7 +459,7 @@ body {
     font-size: 15px;
     font-weight: 700;
     margin-bottom: 10px;
-    margin-top: 16px;
+    margin-top: 6px;
     color: var(--text);
     display: flex;
     justify-content: center;
