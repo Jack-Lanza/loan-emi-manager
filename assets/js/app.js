@@ -364,24 +364,64 @@ function undoAction() {
     );
 }
 
-// EMI Payment
-function payEmiByOriginalIndex(i) {
+// EMI Payment with Visual Confirmation Animation
+let isProcessingPayment = false;
+let recentlyPaidIndex = null;
+
+function payEmiByOriginalIndex(i, btnEl = null) {
+    if (isProcessingPayment) return;
     if (!loans[i] || loans[i].remaining <= 0 || loans[i].paidStatus) return;
-    historyStack.push(JSON.parse(JSON.stringify(loans)));
 
     const loanName = loans[i].name || "Loan";
     const emiAmount = loans[i].emi || 0;
 
-    if (!loans[i].totalTenure) {
-        loans[i].totalTenure = loans[i].remaining;
+    const executePayment = () => {
+        historyStack.push(JSON.parse(JSON.stringify(loans)));
+
+        if (!loans[i].totalTenure) {
+            loans[i].totalTenure = loans[i].remaining;
+        }
+
+        loans[i].remaining -= 1;
+        const options = { day: 'numeric', month: 'short' };
+        loans[i].paidStatus = new Date().toLocaleDateString('en-GB', options);
+
+        recentlyPaidIndex = i;
+        save(false);
+        isProcessingPayment = false;
+
+        // Clear recently paid index highlight after animation settles
+        setTimeout(() => {
+            recentlyPaidIndex = null;
+        }, 1500);
+    };
+
+    if (btnEl) {
+        isProcessingPayment = true;
+        const rowEl = btnEl.closest('.due-row');
+
+        // Transform button into animated Paid stamp
+        const parent = btnEl.parentElement;
+        if (parent) {
+            parent.innerHTML = `<span class="paid-badge paid-stamp-pop" title="Marked as Paid"><img src="assets/images/paid-mark.png" alt="Paid" class="paid-mark-img"></span>`;
+        }
+
+        // Add soft green highlight to the clicked row
+        if (rowEl) {
+            rowEl.classList.add('due-row-just-paid');
+        }
+
+        // Show immediate confirmation toast
+        showToast(`<i class="fa-solid fa-circle-check"></i> Marked ₹${Number(emiAmount).toLocaleString('en-IN')} as paid for ${esc(loanName)}`, "success");
+
+        // Hold the visual confirmation so user clearly sees the payment was completed, then re-sort
+        setTimeout(() => {
+            executePayment();
+        }, 700);
+    } else {
+        executePayment();
+        showToast(`<i class="fa-solid fa-circle-check"></i> Marked ₹${Number(emiAmount).toLocaleString('en-IN')} as paid for ${esc(loanName)}`, "success");
     }
-
-    loans[i].remaining -= 1;
-    const options = { day: 'numeric', month: 'short' };
-    loans[i].paidStatus = new Date().toLocaleDateString('en-GB', options);
-
-    save(false);
-    showToast(`<i class="fa-solid fa-circle-check"></i> Marked ₹${Number(emiAmount).toLocaleString('en-IN')} as paid for ${esc(loanName)}`, "success");
 }
 
 // Tab Switching Navigation
@@ -614,12 +654,13 @@ function renderDue() {
         const isAllSettled = group.items.every(it => it.paidStatus);
 
         const itemsHtml = group.items.map(item => {
+            const isRecentlyPaid = (item.index === recentlyPaidIndex);
             const actionElement = item.paidStatus
                 ? `<span class="paid-badge" title="Marked as Paid"><img src="assets/images/paid-mark.png" alt="Paid" class="paid-mark-img"></span>`
-                : `<button class="btn btn-primary" style="padding: 10px 12px; font-size: 11px;" onclick="payEmiByOriginalIndex(${item.index})"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`;
+                : `<button class="btn btn-primary" style="padding: 10px 12px; font-size: 11px;" onclick="payEmiByOriginalIndex(${item.index}, this)"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`;
 
             return `
-            <div class="due-row${item.paidStatus ? ' is-paid-row' : ''}">
+            <div class="due-row${item.paidStatus ? ' is-paid-row' : ''}${isRecentlyPaid ? ' due-row-settled-highlight' : ''}">
                 <div>
                     <strong>${esc(item.name)}</strong><br>
                     <span style="color: var(--primary); font-weight: 700;">${money(item.emi)}</span>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'emicycle-v20';
+const CACHE_NAME = 'emicycle-v21';
 const ASSETS_TO_CACHE = [
   './',
   'index.html',

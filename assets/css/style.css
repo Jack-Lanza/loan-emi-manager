@@ -577,6 +577,56 @@ body {
     filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.25));
 }
 
+/* Paid Stamp Pop & Settlement Animations */
+.paid-stamp-pop {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    animation: stampPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes stampPop {
+    0% {
+        transform: scale(0.2) rotate(-20deg);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.25) rotate(6deg);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.due-row-just-paid {
+    background: rgba(16, 185, 129, 0.12) !important;
+    border-radius: 8px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.3);
+    transition: all 0.3s ease;
+}
+
+.due-row-just-paid strong {
+    color: var(--success);
+}
+
+.due-row-settled-highlight {
+    animation: settledFade 1.2s ease-out forwards;
+}
+
+@keyframes settledFade {
+    0% {
+        background-color: rgba(16, 185, 129, 0.15);
+        border-radius: 8px;
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
 /* Loan Card Items */
 .loan-card-item {
     background: var(--bg);
