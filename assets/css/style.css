@@ -473,6 +473,16 @@ body {
     padding: 13px 14px;
     border: 1px solid var(--border);
     margin-bottom: 10px;
+    transition: all 0.2s ease;
+}
+
+.due-group.is-all-settled {
+    background: #fafbfe;
+    border-color: #e2e8f0;
+}
+
+.due-row.is-paid-row {
+    opacity: 0.88;
 }
 
 .due-header {

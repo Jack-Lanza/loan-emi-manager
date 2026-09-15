@@ -470,7 +470,30 @@ function renderDue() {
         }
     });
 
-    const sortedDueDays = Object.keys(groups).sort((a, b) => Number(a) - Number(b));
+    // Sort items inside each date group so Pending (unpaid) appears first, then Paid
+    Object.keys(groups).forEach(d => {
+        groups[d].items.sort((a, b) => {
+            const aPaid = a.paidStatus ? 1 : 0;
+            const bPaid = b.paidStatus ? 1 : 0;
+            if (aPaid !== bPaid) {
+                return aPaid - bPaid; // 0 (Pending) before 1 (Paid)
+            }
+            return 0;
+        });
+    });
+
+    // Sort due date groups:
+    // 1. Groups with pending (unpaid) dues appear FIRST (ordered by Due Date ASC)
+    // 2. Groups where all dues are settled appear AFTER (ordered by Due Date ASC)
+    const sortedDueDays = Object.keys(groups).sort((a, b) => {
+        const aHasPending = groups[a].items.some(it => !it.paidStatus) ? 0 : 1;
+        const bHasPending = groups[b].items.some(it => !it.paidStatus) ? 0 : 1;
+        if (aHasPending !== bHasPending) {
+            return aHasPending - bHasPending; // 0 (has pending) comes first
+        }
+        return Number(a) - Number(b); // ASC order of due date (1 to 31)
+    });
+
     const container = document.getElementById("dueSummary");
 
     if (sortedDueDays.length === 0) {
@@ -486,6 +509,7 @@ function renderDue() {
     container.innerHTML = sortedDueDays.map(d => {
         const group = groups[d];
         const suffix = getSuffix(d);
+        const isAllSettled = group.items.every(it => it.paidStatus);
 
         const itemsHtml = group.items.map(item => {
             const actionElement = item.paidStatus
@@ -493,7 +517,7 @@ function renderDue() {
                 : `<button class="btn btn-primary" style="padding: 10px 12px; font-size: 11px;" onclick="payEmiByOriginalIndex(${item.index})"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`;
 
             return `
-            <div class="due-row">
+            <div class="due-row${item.paidStatus ? ' is-paid-row' : ''}">
                 <div>
                     <strong>${esc(item.name)}</strong><br>
                     <span style="color: var(--primary); font-weight: 700;">${money(item.emi)}</span>
@@ -503,9 +527,9 @@ function renderDue() {
         }).join("");
 
         return `
-        <div class="due-group">
+        <div class="due-group${isAllSettled ? ' is-all-settled' : ''}">
             <div class="due-header">
-                <span><i class="fa-regular fa-calendar"></i> Due: ${d}${suffix}</span>
+                <span><i class="fa-regular fa-calendar"></i> Due: ${d}${suffix}${isAllSettled ? ' <span style="font-size: 11px; font-weight: 600; color: var(--success); margin-left: 6px;"><i class="fa-solid fa-check"></i> Settled</span>' : ''}</span>
                 <span style="color: var(--primary); font-weight: 800;">${money(group.total)}</span>
             </div>
             ${itemsHtml}
