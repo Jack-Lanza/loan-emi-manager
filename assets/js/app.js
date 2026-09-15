@@ -421,6 +421,106 @@ function switchTab(tabName) {
     }
 }
 
+// Due Date Notifications System
+function updateNotificationButtonState() {
+    const btn = document.getElementById("notifToggleBtn");
+    if (!btn) return;
+
+    if (!("Notification" in window)) {
+        btn.style.display = "none";
+        return;
+    }
+
+    if (Notification.permission === "granted") {
+        btn.className = "notif-btn active";
+        btn.innerHTML = '<i class="fa-solid fa-bell"></i>';
+        btn.title = "Due date reminders are enabled";
+    } else if (Notification.permission === "denied") {
+        btn.className = "notif-btn denied";
+        btn.innerHTML = '<i class="fa-solid fa-bell-slash"></i>';
+        btn.title = "Notifications blocked in browser settings";
+    } else {
+        btn.className = "notif-btn";
+        btn.innerHTML = '<i class="fa-regular fa-bell"></i>';
+        btn.title = "Click to enable due date notifications";
+    }
+}
+
+async function toggleNotificationPermission() {
+    if (!("Notification" in window)) {
+        showToast('<i class="fa-solid fa-circle-exclamation"></i> Notifications are not supported on this device/browser', "warning");
+        return;
+    }
+
+    if (Notification.permission === "granted") {
+        showToast('<i class="fa-solid fa-bell"></i> Due reminders are active! You will get notified on EMI due dates.', "info");
+        checkAndSendDueNotifications();
+        return;
+    }
+
+    if (Notification.permission === "denied") {
+        showToast('<i class="fa-solid fa-bell-slash"></i> Notifications are blocked. Please enable permissions in browser settings.', "warning");
+        return;
+    }
+
+    try {
+        const permission = await Notification.requestPermission();
+        updateNotificationButtonState();
+        if (permission === "granted") {
+            showToast('<i class="fa-solid fa-bell"></i> Due date notifications enabled successfully!', "success");
+            checkAndSendDueNotifications();
+        } else {
+            showToast('<i class="fa-solid fa-bell-slash"></i> Notification permission was not granted', "info");
+        }
+    } catch (e) {
+        console.warn("Notification permission request error:", e);
+    }
+}
+
+function checkAndSendDueNotifications() {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    if (!("serviceWorker" in navigator)) return;
+
+    const todayDay = new Date().getDate();
+    const todayDueLoans = loans.filter(l => Number(l.due) === todayDay && Number(l.remaining) > 0 && !l.paidStatus);
+
+    navigator.serviceWorker.ready.then(reg => {
+        if (todayDueLoans.length > 0) {
+            let title = "";
+            let body = "";
+
+            if (todayDueLoans.length === 1) {
+                const loan = todayDueLoans[0];
+                title = `📅 EMI Due Today: ${loan.name}`;
+                body = `Payment of ${money(loan.emi)} is due today. Tap to mark as paid in EMICycle.`;
+            } else {
+                const totalDue = todayDueLoans.reduce((s, l) => s + Number(l.emi || 0), 0);
+                title = `📅 ${todayDueLoans.length} EMIs Due Today (${money(totalDue)})`;
+                body = `${todayDueLoans.map(l => `${l.name} (${money(l.emi)})`).join(', ')}. Tap to mark as paid.`;
+            }
+
+            reg.showNotification(title, {
+                body: body,
+                icon: 'assets/images/icon-192.png',
+                badge: 'assets/images/icon-192.png',
+                tag: 'emi-due-today',
+                renotify: false,
+                requireInteraction: true,
+                data: {
+                    url: './index.html'
+                }
+            });
+        } else {
+            // All dues for today are settled or no dues today -> dismiss notification from mobile notification center
+            reg.getNotifications({ tag: 'emi-due-today' }).then(notifications => {
+                notifications.forEach(n => n.close());
+            });
+        }
+    }).catch(err => {
+        console.warn("Error managing due notifications:", err);
+    });
+}
+
 // Main Render Function
 function render() {
     const monthly = loans.reduce((s, l) => s + Number(l.emi || 0), 0);
@@ -452,6 +552,8 @@ function render() {
     renderDue();
     renderLoans();
     updateUndoState();
+    updateNotificationButtonState();
+    checkAndSendDueNotifications();
 }
 
 // Render Due Schedule Timeline
@@ -798,5 +900,12 @@ document.getElementById("confirmModal").addEventListener("click", e => {
 });
 
 // App Initialization
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+        checkAndSendDueNotifications();
+    }
+});
+
+updateNotificationButtonState();
 fetchCloudData();
 

@@ -199,6 +199,51 @@ body {
     display: block;
 }
 
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.notif-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.notif-btn:hover {
+    background: #f1f5f9;
+    color: var(--text);
+}
+
+.notif-btn:active {
+    transform: scale(0.92);
+}
+
+.notif-btn.active {
+    background: #eff6ff;
+    color: var(--primary);
+    border-color: rgba(79, 70, 229, 0.3);
+}
+
+.notif-btn.denied {
+    background: #fef2f2;
+    color: var(--danger);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
 .sync-badge {
     font-size: 11.5px;
     font-weight: 700;

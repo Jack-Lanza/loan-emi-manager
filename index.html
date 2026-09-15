@@ -53,9 +53,15 @@
             <!-- Header -->
             <header class="header">
                 <img src="assets/images/EMICycle-logo.png" alt="EMICycle" class="logo-img">
-                <div class="sync-badge" id="syncStatusBadge" onclick="handleSyncBadgeClick()"
-                    title="Click to view status or setup sync">
-                    <span id="syncStatusText">Loading...</span>
+                <div class="header-right">
+                    <button type="button" class="notif-btn" id="notifToggleBtn" onclick="toggleNotificationPermission()"
+                        title="Enable Due Date Notifications">
+                        <i class="fa-regular fa-bell"></i>
+                    </button>
+                    <div class="sync-badge" id="syncStatusBadge" onclick="handleSyncBadgeClick()"
+                        title="Click to view status or setup sync">
+                        <span id="syncStatusText">Loading...</span>
+                    </div>
                 </div>
             </header>
 

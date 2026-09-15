@@ -1,4 +1,4 @@
-const CACHE_NAME = 'emicycle-v19';
+const CACHE_NAME = 'emicycle-v20';
 const ASSETS_TO_CACHE = [
   './',
   'index.html',
@@ -42,6 +42,26 @@ self.addEventListener('activate', event => {
         })
       );
     }).then(() => self.clients.claim())
+  );
+});
+
+// Notification Click Event: Focus existing window or open app
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+
+  const urlToOpen = new URL('./index.html', self.location.origin).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      for (const client of windowClients) {
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
   );
 });
 
