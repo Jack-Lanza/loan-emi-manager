@@ -3,11 +3,17 @@
  */
 let deferredPrompt = null;
 
+// Clear legacy persistent dismiss flag so uninstalled users always see the install prompt
+localStorage.removeItem('pwaPromptDismissed');
+
 // Register Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('PWA Service Worker registered with scope:', reg.scope))
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => {
+                console.log('PWA Service Worker registered with scope:', reg.scope);
+                reg.update();
+            })
             .catch(err => console.log('PWA Service Worker registration failed:', err));
     });
 }
@@ -19,15 +25,21 @@ function isRunningStandalone() {
            (document.referrer.includes('android-app://'));
 }
 
+// Show Install Banner if opened in normal browser
+function checkAndShowInstallBanner() {
+    if (!isRunningStandalone() && !sessionStorage.getItem('pwaBannerDismissedSession')) {
+        const banner = document.getElementById('pwaInstallBanner');
+        if (banner) {
+            banner.style.display = 'flex';
+        }
+    }
+}
+
 // Capture Chrome/Android install prompt
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-
-    if (!isRunningStandalone() && !localStorage.getItem('pwaPromptDismissed')) {
-        const banner = document.getElementById('pwaInstallBanner');
-        if (banner) banner.style.display = 'flex';
-    }
+    checkAndShowInstallBanner();
 });
 
 // Prompt PWA Install
@@ -37,42 +49,42 @@ function installPwaApp() {
         deferredPrompt.userChoice.then((choiceResult) => {
             if (choiceResult.outcome === 'accepted') {
                 console.log('User accepted PWA installation');
+                const banner = document.getElementById('pwaInstallBanner');
+                if (banner) banner.style.display = 'none';
             }
             deferredPrompt = null;
-            dismissPwaBanner();
         });
     } else {
         const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isIos) {
             alert("To install EMICycle on your iPhone/iPad:\n1. Tap the Share button (⎋) in Safari.\n2. Scroll down and tap 'Add to Home Screen' (+).");
         } else {
-            alert("To install, open your browser menu (⋮) and tap 'Add to Home Screen' or 'Install App'.");
+            alert("To install:\nTap your browser menu (⋮) in the top-right corner and select 'Install app' or 'Add to Home screen'.");
         }
     }
 }
 
-// Dismiss PWA Banner
+// Dismiss PWA Banner (only for the current browsing session)
 function dismissPwaBanner() {
     const banner = document.getElementById('pwaInstallBanner');
     if (banner) banner.style.display = 'none';
-    localStorage.setItem('pwaPromptDismissed', 'true');
+    sessionStorage.setItem('pwaBannerDismissedSession', 'true');
 }
 
-// Show iOS Safari guidance if applicable
+// Show banner on page load if in normal browser
 window.addEventListener('DOMContentLoaded', () => {
+    checkAndShowInstallBanner();
+
     const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.MSStream;
-    if (isIos && !isRunningStandalone() && !localStorage.getItem('pwaPromptDismissed')) {
-        const banner = document.getElementById('pwaInstallBanner');
-        const desc = document.getElementById('pwaBannerDesc');
-        if (banner && desc) {
-            desc.textContent = "Tap the Share button (⎋) and select 'Add to Home Screen' to use EMICycle as an app.";
-            banner.style.display = 'flex';
-        }
+    const desc = document.getElementById('pwaBannerDesc');
+    if (isIos && desc) {
+        desc.textContent = "Tap the Share button (⎋) in Safari and select 'Add to Home Screen' to use EMICycle as a full app.";
     }
 });
 
 // App installed event listener
 window.addEventListener('appinstalled', () => {
     console.log('EMICycle app installed successfully');
-    dismissPwaBanner();
+    const banner = document.getElementById('pwaInstallBanner');
+    if (banner) banner.style.display = 'none';
 });

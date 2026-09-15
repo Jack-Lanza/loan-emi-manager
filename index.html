@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>EMICycle — Smart Loan Tracker</title>
     
     <!-- PWA & Mobile Meta Tags -->
@@ -40,58 +40,64 @@
             </div>
         </div>
 
-        <!-- Header -->
-        <header class="header">
-            <img src="assets/images/EMICycle-logo.png" alt="EMICycle" class="logo-img">
-            <div class="sync-badge" id="syncStatusBadge" onclick="handleSyncBadgeClick()" title="Click to view status or setup sync">
-                <span id="syncDot">●</span> <span id="syncStatusText">Loading...</span>
-            </div>
-        </header>
+        <!-- Sticky Top Control & Summary Section -->
+        <div class="top-sticky-container">
+            <!-- Header -->
+            <header class="header">
+                <img src="assets/images/EMICycle-logo.png" alt="EMICycle" class="logo-img">
+                <div class="sync-badge" id="syncStatusBadge" onclick="handleSyncBadgeClick()" title="Click to view status or setup sync">
+                    <span id="syncDot">●</span> <span id="syncStatusText">Loading...</span>
+                </div>
+            </header>
 
-        <!-- Hero Card -->
-        <section class="hero-card">
-            <small>This Month Total Due</small>
-            <div class="hero-amount" id="monthTotalDue">₹0</div>
-        </section>
+            <!-- Hero Card: Total Due -->
+            <section class="hero-card">
+                <small>This Month Total Due</small>
+                <div class="hero-amount" id="monthTotalDue">₹0</div>
+            </section>
 
-        <!-- Metrics Grid -->
-        <section class="metrics-grid">
-            <div class="metric-card">
-                <small>Monthly EMI</small>
-                <div class="metric-val" id="monthly">₹0</div>
-            </div>
-            <div class="metric-card">
-                <small>Total Left</small>
-                <div class="metric-val" id="remaining">₹0</div>
-            </div>
-            <div class="metric-card">
-                <small>Next Due</small>
-                <div class="metric-val" id="nextDue">—</div>
-            </div>
-        </section>
+            <!-- Metrics Grid: Monthly EMI | Total Left | Next Due -->
+            <section class="metrics-grid">
+                <div class="metric-card">
+                    <small>Monthly EMI</small>
+                    <div class="metric-val" id="monthly">₹0</div>
+                </div>
+                <div class="metric-card">
+                    <small>Total Left</small>
+                    <div class="metric-val" id="remaining">₹0</div>
+                </div>
+                <div class="metric-card">
+                    <small>Next Due</small>
+                    <div class="metric-val" id="nextDue">—</div>
+                </div>
+            </section>
 
-        <!-- Actions Toolbar -->
-        <nav class="actions">
-            <button class="btn btn-primary" onclick="openAddModal()">＋ Add</button>
-            <button class="btn btn-secondary" onclick="undoAction()" id="undoBtn" disabled style="opacity:0.5">↩ Undo</button>
-            <button class="btn btn-secondary" id="syncActionBtn" onclick="handleSyncActionClick()">☁️ Setup Sync</button>
-            <button class="btn btn-danger" onclick="resetData()">Reset</button>
-        </nav>
+            <!-- Actions Toolbar: Add | Undo | Setup/Sync | Reset -->
+            <nav class="actions">
+                <button class="btn btn-primary" onclick="openAddModal()">＋ Add</button>
+                <button class="btn btn-secondary" onclick="undoAction()" id="undoBtn" disabled style="opacity:0.5">↩ Undo</button>
+                <button class="btn btn-secondary" id="syncActionBtn" onclick="handleSyncActionClick()">☁️ Setup Sync</button>
+                <button class="btn btn-danger" onclick="resetData()">Reset</button>
+            </nav>
+        </div>
 
-        <!-- Due Timeline Section -->
-        <div class="section-title">📅 Due Schedule</div>
-        <div id="dueSummary"></div>
+        <!-- Scrollable Main Content: Due Schedule & Manage Loans -->
+        <main class="scrollable-content">
+            <!-- Due Timeline Section -->
+            <div class="section-title">📅 Due Schedule</div>
+            <div id="dueSummary"></div>
 
-        <!-- Manage Loans Section -->
-        <div class="section-title">⚙️ Manage Loans</div>
-        <div id="loanCards"></div>
+            <!-- Manage Loans Section -->
+            <div class="section-title">⚙️ Manage Loans</div>
+            <div id="loanCards"></div>
+        </main>
     </div>
 
     <!-- Add / Edit Loan Modal Dialog -->
     <div class="modal-overlay" id="loanModal">
         <div class="modal-box">
             <div class="modal-header">
-                <span id="modalTitle">Edit Loan</span>
+                <span id="modalTitle">➕ Add New Loan</span>
                 <button class="modal-close-btn" onclick="closeModal()">✕</button>
             </div>
             <form id="loanForm" onsubmit="handleLoanFormSubmit(event)" novalidate>

@@ -1,7 +1,7 @@
 {
-  "name": "EMICycle - Smart Loan Tracker",
+  "name": "EMICycle",
   "short_name": "EMICycle",
-  "description": "Live cloud-synced Loan & EMI Manager",
+  "description": "EMI Tracker",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f8fafc",
@@ -9,7 +9,7 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "assets/images/EMICycle-logo.png",
+      "src": "EMICycle-favicon.ico",
       "sizes": "192x192 512x512",
       "type": "image/png",
       "purpose": "any maskable"
