@@ -20,7 +20,8 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
     background: var(--surface);
@@ -92,6 +93,7 @@ body {
         opacity: 0;
         transform: translateY(-8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -110,7 +112,7 @@ body {
     gap: 8px;
     font-size: 13px;
     font-weight: 700;
-    color: #1e1b4b;
+    color: #c7d2fe;
 }
 
 .pwa-banner-desc {
@@ -179,42 +181,49 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: 2px;
     margin-bottom: 14px;
+    margin-left: -12px;
+    margin-right: -12px;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .logo-img {
-    height: 36px;
+    height: 48px;
+    max-width: 220px;
     width: auto;
     object-fit: contain;
     display: block;
 }
 
 .sync-badge {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 4px 10px;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 5px 12px;
     border-radius: 20px;
     background: var(--success-bg);
     color: var(--success);
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.25);
     user-select: none;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .sync-badge.offline {
     background: var(--warning-bg);
     color: var(--warning);
-    border-color: rgba(245, 158, 11, 0.3);
+    border-color: rgba(245, 158, 11, 0.35);
 }
 
 .sync-badge.syncing {
     background: #eff6ff;
     color: var(--primary);
-    border-color: rgba(79, 70, 229, 0.2);
+    border-color: rgba(79, 70, 229, 0.25);
 }
 
 /* Hero Card */
@@ -513,6 +522,7 @@ body {
         opacity: 0;
         transform: scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
@@ -589,11 +599,18 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-2px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-2px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.form-control.is-invalid ~ .invalid-feedback {
+.form-control.is-invalid~.invalid-feedback {
     display: block;
 }
 
