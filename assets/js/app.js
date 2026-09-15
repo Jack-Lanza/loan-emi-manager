@@ -63,12 +63,9 @@ let onConfirmCallback = null;
 const money = n => "₹" + Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
 function formatNextDue(amount, dueDay) {
-    if (!amount) return "All paid 🎉";
-    if (amount >= 1000) {
-        const kVal = (amount / 1000).toFixed(2).replace(/\.00$/, '');
-        return `₹${kVal}K`;
-    }
-    return money(amount);
+    if (!amount || !dueDay) return "All Paid";
+    const suffix = getSuffix(dueDay);
+    return `${money(amount)} • ${dueDay}${suffix}`;
 }
 
 function maskId(id) {
@@ -446,9 +443,8 @@ function renderDue() {
         const suffix = getSuffix(d);
 
         const itemsHtml = group.items.map(item => {
-            const displayDate = String(item.paidStatus || '').replace(/^Paid\s*:\s*/i, '');
             const actionElement = item.paidStatus
-                ? `<span class="paid-badge"><img src="assets/images/paid-mark.png" alt="Paid" class="paid-mark-img"> <span>${displayDate}</span></span>`
+                ? `<span class="paid-badge" title="Marked as Paid"><img src="assets/images/paid-mark.png" alt="Paid" class="paid-mark-img"></span>`
                 : `<button class="btn btn-primary" style="padding: 10px 12px; font-size: 11px;" onclick="payEmiByOriginalIndex(${item.index})"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`;
 
             return `
