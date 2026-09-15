@@ -1,4 +1,4 @@
-const CACHE_NAME = 'emicycle-v8';
+const CACHE_NAME = 'emicycle-v15';
 const ASSETS_TO_CACHE = [
   './',
   'index.html',
@@ -10,7 +10,9 @@ const ASSETS_TO_CACHE = [
   'assets/images/icon-512.png',
   'assets/images/icon-maskable.png',
   'assets/images/EMICycle-logo.png',
-  'assets/images/EMICycle-favicon.ico'
+  'assets/images/EMICycle-favicon.ico',
+  'assets/images/paid-mark.png',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
 ];
 
 // Install Event: Resilient asset caching

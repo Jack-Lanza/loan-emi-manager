@@ -228,80 +228,78 @@ body {
     border-color: rgba(79, 70, 229, 0.25);
 }
 
-/* Hero Card */
-.hero-card {
-    background: var(--primary-gradient);
-    color: white;
-    border-radius: var(--radius);
-    padding: 18px 20px;
-    box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.32);
-    margin-bottom: 10px;
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-card::after {
-    content: '';
-    position: absolute;
-    top: -30px;
-    right: -30px;
-    width: 100px;
-    height: 100px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-.hero-card small {
-    display: block;
-    font-size: 11px;
-    opacity: 0.85;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 700;
-}
-
-.hero-amount {
-    font-size: 28px;
-    font-weight: 800;
-    margin-top: 3px;
-    letter-spacing: -0.5px;
-}
-
-/* Metrics Grid */
-.metrics-grid {
+/* 2x2 Balanced Summary Grid */
+.summary-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
     margin-bottom: 10px;
 }
 
-.metric-card {
+.summary-card {
     background: var(--bg);
-    border-radius: 12px;
-    padding: 9px 8px;
+    border-radius: var(--radius);
+    padding: 12px 13px;
     border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 64px;
+    transition: transform 0.15s ease;
 }
 
-.metric-card small {
+.summary-card small {
     display: block;
-    font-size: 10px;
+    font-size: 10.5px;
     color: var(--text-muted);
     font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.metric-val {
-    font-size: 13px;
+.summary-val {
+    font-size: 16.5px;
     font-weight: 800;
-    margin-top: 3px;
     color: var(--text);
+    letter-spacing: -0.3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Primary Accent Card (Due This Month) */
+.summary-card.hero-accent {
+    background: var(--primary-gradient);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 6px 16px -3px rgba(79, 70, 229, 0.32);
+}
+
+.summary-card.hero-accent small {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.summary-card.hero-accent .summary-val {
+    color: #ffffff;
+    font-size: 18px;
+}
+
+.summary-card.hero-accent::after {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
 }
 
 /* Actions Toolbar */
@@ -381,7 +379,7 @@ body {
     margin-top: 16px;
     color: var(--text);
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
 }
 
@@ -420,23 +418,35 @@ body {
 }
 
 .paid-badge {
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 700;
     color: var(--success);
     background: var(--success-bg);
-    padding: 4px 8px;
-    border-radius: 6px;
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    padding: 3px 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(16, 185, 129, 0.25);
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.paid-mark-img {
+    width: 25px;
+    height: 25px;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 /* Loan Card Items */
 .loan-card-item {
     background: var(--bg);
     border-radius: var(--radius);
-    padding: 13px 14px;
+    padding: 14px 15px;
     border: 1px solid var(--border);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px -2px rgba(15, 23, 42, 0.04);
 }
 
 .loan-card-header {
@@ -449,12 +459,18 @@ body {
     align-items: center;
 }
 
+.loan-card-title {
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--text);
+}
+
 .due-pill {
     font-size: 11px;
     color: var(--text-muted);
-    font-weight: 600;
+    font-weight: 700;
     background: var(--surface);
-    padding: 3px 8px;
+    padding: 3px 9px;
     border-radius: 12px;
     border: 1px solid var(--border);
 }
@@ -462,31 +478,117 @@ body {
 .loan-card-body {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    gap: 8px;
     font-size: 12px;
     color: var(--text-muted);
-    margin-bottom: 10px;
-    padding: 9px 11px;
-    border-radius: 8px;
+    margin-bottom: 8px;
+    padding: 9px 12px;
+    border-radius: 10px;
     border: 1px solid var(--border);
     background: var(--surface);
 }
 
 .loan-card-body span {
-    font-weight: 700;
+    font-weight: 800;
     color: var(--text);
+}
+
+/* Loan Progress Bar */
+.loan-progress-box {
+    margin-bottom: 10px;
+    padding: 0 2px;
+}
+
+.loan-progress-wrap {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.loan-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #4f46e5 0%, #10b981 100%);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+.loan-progress-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+.loan-progress-labels .progress-pct {
+    color: var(--primary);
 }
 
 .loan-card-actions {
     display: flex;
-    gap: 6px;
+    gap: 8px;
 }
 
 .loan-card-actions button {
     flex: 1;
     padding: 8px;
     justify-content: center;
-    font-size: 11px;
+    font-size: 11.5px;
+}
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+    width: calc(100% - 32px);
+    max-width: 420px;
+}
+
+.toast {
+    background: #0f172a;
+    color: #ffffff;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toast.toast-show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-success {
+    background: #064e3b;
+    color: #ecfdf5;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.toast-info {
+    background: #1e1b4b;
+    color: #e0e7ff;
+    border-color: rgba(99, 102, 241, 0.3);
 }
 
 /* Modal Overlay & Dialog */
@@ -624,12 +726,44 @@ body {
 
 .empty-state {
     text-align: center;
-    padding: 20px;
+    padding: 24px 20px;
     color: var(--text-muted);
     font-size: 13px;
     background: var(--bg);
     border-radius: var(--radius);
     border: 1px dashed var(--border);
+}
+
+.empty-icon {
+    font-size: 30px;
+    color: var(--primary);
+    margin-bottom: 8px;
+    opacity: 0.85;
+}
+
+.btn i {
+    font-size: 11.5px;
+    margin-right: 2px;
+}
+
+.section-title i {
+    color: var(--primary);
+    margin-right: 5px;
+}
+
+.modal-header i {
+    color: var(--primary);
+    margin-right: 6px;
+}
+
+.loan-card-title i {
+    color: var(--primary);
+    margin-right: 5px;
+}
+
+.due-pill i {
+    font-size: 10px;
+    margin-right: 3px;
 }
 
 /* PWA Install Banner */

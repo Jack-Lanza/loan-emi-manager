@@ -95,10 +95,10 @@ function showConfirmModal(title, message, btnText, btnClass, callback, showCance
     const actionBtn = document.getElementById("confirmModalActionBtn");
     const cancelBtn = document.querySelector("#confirmModal .btn-secondary");
 
-    if (titleEl) titleEl.textContent = title || "Confirm Action";
+    if (titleEl) titleEl.innerHTML = title || '<i class="fa-solid fa-circle-exclamation"></i> Confirm Action';
     if (msgEl) msgEl.innerHTML = message || "Are you sure you want to proceed?";
     if (actionBtn) {
-        actionBtn.textContent = btnText || "Confirm";
+        actionBtn.innerHTML = btnText || "Confirm";
         actionBtn.className = "btn " + (btnClass || "btn-danger");
     }
     if (cancelBtn) {
@@ -134,10 +134,10 @@ function updateSyncBadge(status, text) {
 
     if (syncActionBtn) {
         if (NPOINT_ID) {
-            syncActionBtn.innerHTML = "🔄 Sync";
+            syncActionBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Sync';
             syncActionBtn.title = "Refresh live cloud sync";
         } else {
-            syncActionBtn.innerHTML = "☁️ Setup Sync";
+            syncActionBtn.innerHTML = '<i class="fa-solid fa-cloud"></i> Setup Sync';
             syncActionBtn.title = "Connect your device to a Cloud Bin";
         }
     }
@@ -147,19 +147,19 @@ function updateSyncBadge(status, text) {
     if (!NPOINT_ID) {
         // Pure Local Browser Database Mode
         badge.className = "sync-badge";
-        statusText.innerHTML = `Local Storage`;
+        statusText.innerHTML = `<i class="fa-solid fa-hard-drive"></i> Local Storage`;
         badge.title = "Operating in Local Device Mode. Click to setup cloud sync.";
         return;
     }
 
     badge.className = "sync-badge " + status;
     if (status === "synced") {
-        statusText.innerHTML = `ID : <span id="binIdDisplay">${maskId(NPOINT_ID)}</span>`;
+        statusText.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> ID : <span id="binIdDisplay">${maskId(NPOINT_ID)}</span>`;
         badge.title = `Cloud Synced (ID: ${NPOINT_ID}). Click to refresh.`;
     } else if (status === "syncing") {
-        statusText.textContent = text || "Syncing...";
+        statusText.innerHTML = `<i class="fa-solid fa-rotate fa-spin"></i> ${text || "Syncing..."}`;
     } else if (status === "offline") {
-        statusText.textContent = text || "Offline Mode";
+        statusText.innerHTML = `<i class="fa-solid fa-cloud-slash"></i> ${text || "Offline Mode"}`;
     }
 }
 
@@ -318,6 +318,26 @@ function save(pushHistory = true) {
         });
 }
 
+// Toast Notification System
+function showToast(message, type = "info") {
+    const container = document.getElementById("toastContainer");
+    if (!container) return;
+
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<span>${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add("toast-show");
+    }, 20);
+
+    setTimeout(() => {
+        toast.classList.remove("toast-show");
+        setTimeout(() => toast.remove(), 300);
+    }, 2800);
+}
+
 // Undo Action
 function updateUndoState() {
     const btn = document.getElementById("undoBtn");
@@ -335,13 +355,14 @@ function updateUndoState() {
 function undoAction() {
     if (historyStack.length === 0) return;
     showConfirmModal(
-        "↩ Confirm Undo",
+        '<i class="fa-solid fa-rotate-left"></i> Confirm Undo',
         `Are you sure you want to undo your last action?<br><span style="font-size: 12px; color: var(--text-muted);">This will restore your previous loan list and payment state.</span>`,
         "Yes, Undo",
         "btn-primary",
         () => {
             loans = historyStack.pop();
             save(false);
+            showToast('<i class="fa-solid fa-rotate-left"></i> Action undone successfully', "info");
         }
     );
 }
@@ -351,11 +372,19 @@ function payEmiByOriginalIndex(i) {
     if (!loans[i] || loans[i].remaining <= 0 || loans[i].paidStatus) return;
     historyStack.push(JSON.parse(JSON.stringify(loans)));
 
+    const loanName = loans[i].name || "Loan";
+    const emiAmount = loans[i].emi || 0;
+
+    if (!loans[i].totalTenure) {
+        loans[i].totalTenure = loans[i].remaining;
+    }
+
     loans[i].remaining -= 1;
     const options = { day: 'numeric', month: 'short' };
-    loans[i].paidStatus = "Paid : " + new Date().toLocaleDateString('en-GB', options);
+    loans[i].paidStatus = new Date().toLocaleDateString('en-GB', options);
 
     save(false);
+    showToast(`<i class="fa-solid fa-circle-check"></i> Marked ₹${Number(emiAmount).toLocaleString('en-IN')} as paid for ${esc(loanName)}`, "success");
 }
 
 // Main Render Function
@@ -376,7 +405,7 @@ function render() {
 
     const unpaidFuture = loans.filter(l => l.remaining > 0 && !l.paidStatus).sort((a, b) => a.due - b.due);
     const next = unpaidFuture[0];
-    document.getElementById("nextDue").textContent = (unpaidFuture.length > 0 && next) ? formatNextDue(next.emi, next.due) : "All paid 🎉";
+    document.getElementById("nextDue").textContent = (unpaidFuture.length > 0 && next) ? formatNextDue(next.emi, next.due) : "All Paid";
 
     renderDue();
     renderLoans();
@@ -403,7 +432,12 @@ function renderDue() {
     const container = document.getElementById("dueSummary");
 
     if (sortedDueDays.length === 0) {
-        container.innerHTML = `<div class="empty-state">No upcoming dues. Click "+ Add" to create a loan.</div>`;
+        container.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <strong>No Upcoming Dues</strong><br>
+            <span>All dues for this cycle are settled or no active loans exist.</span>
+        </div>`;
         return;
     }
 
@@ -412,9 +446,10 @@ function renderDue() {
         const suffix = getSuffix(d);
 
         const itemsHtml = group.items.map(item => {
+            const displayDate = String(item.paidStatus || '').replace(/^Paid\s*:\s*/i, '');
             const actionElement = item.paidStatus
-                ? `<span class="paid-badge">${item.paidStatus}</span>`
-                : `<button class="btn btn-primary" style="padding: 5px 12px; font-size: 11px;" onclick="payEmiByOriginalIndex(${item.index})">✔ Paid</button>`;
+                ? `<span class="paid-badge"><img src="assets/images/paid-mark.png" alt="Paid" class="paid-mark-img"> <span>${displayDate}</span></span>`
+                : `<button class="btn btn-primary" style="padding: 10px 12px; font-size: 11px;" onclick="payEmiByOriginalIndex(${item.index})"><i class="fa-solid fa-check-double"></i> Mark Paid</button>`;
 
             return `
             <div class="due-row">
@@ -429,7 +464,7 @@ function renderDue() {
         return `
         <div class="due-group">
             <div class="due-header">
-                <span>Due: ${d}${suffix}</span>
+                <span><i class="fa-regular fa-calendar"></i> Due: ${d}${suffix}</span>
                 <span style="color: var(--primary); font-weight: 800;">${money(group.total)}</span>
             </div>
             ${itemsHtml}
@@ -443,31 +478,45 @@ function renderLoans() {
     if (!container) return;
 
     if (loans.length === 0) {
-        container.innerHTML = `<div class="empty-state">No loans added yet. Click "+ Add" above to start tracking.</div>`;
+        container.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-building-columns"></i></div>
+            <strong>No Active Loans Added Yet</strong><br>
+            <span>Tap <strong><i class="fa-solid fa-plus"></i> Add</strong> above to start tracking your first loan schedule.</span>
+        </div>`;
         return;
     }
 
     container.innerHTML = loans.map((l, i) => {
         const suffix = getSuffix(l.due);
-        const tenureFormatted = String(l.remaining).padStart(2, '0');
-        const totalValue = Number(l.emi || 0) * Number(l.remaining || 0);
+        const currentRemaining = Number(l.remaining || 0);
+        const totalTenure = Number(l.totalTenure || currentRemaining || 1);
+        const paidCount = Math.max(0, totalTenure - currentRemaining);
+        const progressPercent = totalTenure > 0 ? Math.min(100, Math.round((paidCount / totalTenure) * 100)) : 0;
+        const totalValue = Number(l.emi || 0) * currentRemaining;
 
         return `
         <div class="loan-card-item">
             <div class="loan-card-header">
-                <span>${esc(l.name)}</span>
-                <span class="due-pill">Due: ${l.due}${suffix}</span>
+                <span class="loan-card-title"><i class="fa-solid fa-receipt"></i> ${esc(l.name)}</span>
+                <span class="due-pill"><i class="fa-regular fa-calendar-check"></i> Due: ${l.due}${suffix}</span>
             </div>
             <div class="loan-card-body">
-                <div>EMI: <span>${money(l.emi)}</span></div>
-                <div>Tenure: <span>${tenureFormatted}</span></div>
-                <div style="grid-column: span 2; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 2px;">
-                    Total Value: <span style="color: var(--primary); font-weight: 800;">${money(totalValue)}</span>
+                <div>Monthly EMI: <span>${money(l.emi)}</span></div>
+                <div>Balance: <span>${money(totalValue)}</span></div>
+            </div>
+            <div class="loan-progress-box">
+                <div class="loan-progress-wrap">
+                    <div class="loan-progress-bar" style="width: ${progressPercent}%;"></div>
+                </div>
+                <div class="loan-progress-labels">
+                    <span>${currentRemaining} EMIs Left</span>
+                    <span class="progress-pct">${progressPercent}% Paid</span>
                 </div>
             </div>
             <div class="loan-card-actions">
-                <button class="btn btn-secondary" onclick="openEditModal(${i})">✏️ Edit</button>
-                <button class="btn btn-danger" onclick="removeLoan(${i})">✕ Close</button>
+                <button class="btn btn-secondary" onclick="openEditModal(${i})"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                <button class="btn btn-danger" onclick="removeLoan(${i})"><i class="fa-solid fa-trash-can"></i> Delete</button>
             </div>
         </div>`;
     }).join("");
@@ -498,7 +547,7 @@ function clearAllLoanModalValidation() {
 // Modal Dialog Operations
 function openAddModal() {
     clearAllLoanModalValidation();
-    document.getElementById("modalTitle").innerHTML = "➕ Add New Loan";
+    document.getElementById("modalTitle").innerHTML = '<i class="fa-solid fa-circle-plus"></i> Add New Loan';
     document.getElementById("modalLoanIndex").value = "-1";
     document.getElementById("modalLoanName").value = "";
     document.getElementById("modalLoanEmi").value = "";
@@ -512,7 +561,7 @@ function openEditModal(i) {
     const l = loans[i];
     if (!l) return;
     clearAllLoanModalValidation();
-    document.getElementById("modalTitle").innerHTML = "✏️ Edit Loan";
+    document.getElementById("modalTitle").innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Loan';
     document.getElementById("modalLoanIndex").value = i;
     document.getElementById("modalLoanName").value = l.name;
     document.getElementById("modalLoanEmi").value = l.emi;
@@ -588,15 +637,21 @@ function handleLoanFormSubmit(e) {
         loans[index].emi = emiVal;
         loans[index].remaining = remainingVal;
         loans[index].due = dueVal;
+        if (!loans[index].totalTenure || remainingVal > loans[index].totalTenure) {
+            loans[index].totalTenure = remainingVal;
+        }
+        showToast('<i class="fa-solid fa-pen-to-square"></i> Loan updated successfully', "success");
     } else {
         // Add new loan
         loans.push({
             name: nameVal,
             remaining: remainingVal,
+            totalTenure: remainingVal,
             emi: emiVal,
             due: dueVal,
             paidStatus: null
         });
+        showToast('<i class="fa-solid fa-circle-plus"></i> Loan added successfully', "success");
     }
 
     closeModal();
@@ -606,7 +661,7 @@ function handleLoanFormSubmit(e) {
 function removeLoan(i) {
     const loanName = (loans[i] && loans[i].name) ? esc(loans[i].name) : "this loan";
     showConfirmModal(
-        "✕ Close / Delete Loan",
+        '<i class="fa-solid fa-triangle-exclamation"></i> Delete Loan',
         `Are you sure you want to delete <strong>${loanName}</strong>?<br><span style="font-size:12px; color:var(--text-muted);">This action will remove it from your active loans and payment schedule.</span>`,
         "Yes, Delete",
         "btn-danger",
@@ -614,32 +669,44 @@ function removeLoan(i) {
             historyStack.push(JSON.parse(JSON.stringify(loans)));
             loans.splice(i, 1);
             save(false);
+            showToast('<i class="fa-solid fa-trash-can"></i> Loan deleted', "info");
         }
     );
 }
 
 function resetData() {
-    if (loans.length === 0) {
-        showConfirmModal(
-            "ℹ️ No Loans",
-            "There are currently no active loans to clear.",
-            "OK",
-            "btn-secondary",
-            () => { },
-            false
-        );
-        return;
-    }
-
     showConfirmModal(
-        "⚠️ Reset All Loans",
-        `Are you sure you want to clear and reset all loans?<br><span style="font-size: 12px; color: var(--text-muted);">All current entries will be permanently removed from your list.</span>`,
-        "Yes, Reset All",
+        '<i class="fa-solid fa-trash-can"></i> Reset & Clear All Data',
+        `Are you sure you want to completely clear everything?<br><span style="font-size: 12px; color: var(--text-muted);">This will remove all loans, clear local database, unlink cloud sync ID, clear cache, and start 100% fresh.</span>`,
+        "Yes, Clear Everything",
         "btn-danger",
         () => {
-            historyStack.push(JSON.parse(JSON.stringify(loans)));
+            // 1. Clear all local and session storage
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // 2. Clear browser cache storage
+            if ('caches' in window) {
+                caches.keys().then(keys => {
+                    keys.forEach(key => caches.delete(key));
+                }).catch(err => console.warn("Cache clear error:", err));
+            }
+
+            // 3. Reset all runtime state
             loans = [];
-            save(false);
+            historyStack = [];
+            NPOINT_ID = null;
+            API_URL = null;
+
+            // 4. Remove URL query parameters or hashes if present
+            if (window.location.search || window.location.hash) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            // 5. Update UI badge and re-render fresh state
+            updateSyncBadge("local");
+            render();
+            showToast('<i class="fa-solid fa-broom"></i> All loans, cloud sync ID, and caches cleared', "info");
         }
     );
 }
@@ -667,3 +734,4 @@ document.getElementById("confirmModal").addEventListener("click", e => {
 
 // App Initialization
 fetchCloudData();
+
