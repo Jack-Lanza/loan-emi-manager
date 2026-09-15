@@ -30,7 +30,7 @@ body {
     min-height: 100vh;
     min-height: 100dvh;
     width: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 body {
@@ -70,7 +70,8 @@ body {
         box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18);
         border: 1px solid var(--border);
         min-height: 840px;
-        overflow: hidden;
+        max-height: 94vh;
+        overflow-y: auto;
     }
 }
 
@@ -164,16 +165,17 @@ body {
 
 /* Sticky Top Section (Header, Summary Cards, Toolbar) */
 .top-sticky-container {
+    position: -webkit-sticky;
     position: sticky;
     top: 0;
-    z-index: 40;
+    z-index: 100;
     background: var(--surface);
-    padding-top: max(14px, env(safe-area-inset-top, 14px));
+    padding-top: max(10px, env(safe-area-inset-top, 10px));
     padding-left: 16px;
     padding-right: 16px;
     padding-bottom: 10px;
-    border-bottom: 1px solid rgba(226, 232, 240, 0.7);
-    box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.04);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.06);
 }
 
 /* Header */
@@ -190,7 +192,7 @@ body {
 }
 
 .logo-img {
-    height: 48px;
+    height: 65px;
     max-width: 220px;
     width: auto;
     object-fit: contain;
