@@ -131,8 +131,8 @@ function updateSyncBadge(status, text) {
 
     if (syncActionBtn) {
         if (NPOINT_ID) {
-            syncActionBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Sync';
-            syncActionBtn.title = "Refresh live cloud sync";
+            syncActionBtn.innerHTML = '<i class="fa-solid fa-hard-drive"></i> Setup Local';
+            syncActionBtn.title = "Switch back to Local Device Storage";
         } else {
             syncActionBtn.innerHTML = '<i class="fa-solid fa-cloud"></i> Setup Sync';
             syncActionBtn.title = "Connect your device to a Cloud Bin";
@@ -152,7 +152,7 @@ function updateSyncBadge(status, text) {
     badge.className = "sync-badge " + status;
     if (status === "synced") {
         statusText.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> ID : <span id="binIdDisplay">${maskId(NPOINT_ID)}</span>`;
-        badge.title = `Cloud Synced (ID: ${NPOINT_ID}). Click to refresh.`;
+        badge.title = `Cloud Synced (ID: ${NPOINT_ID}). Click to sync/refresh.`;
     } else if (status === "syncing") {
         statusText.innerHTML = `<i class="fa-solid fa-rotate fa-spin"></i> ${text || "Syncing..."}`;
     } else if (status === "offline") {
@@ -177,7 +177,24 @@ function closeSyncModal() {
 
 function handleSyncActionClick() {
     if (NPOINT_ID) {
-        fetchCloudData();
+        // Option to switch to local storage
+        showConfirmModal(
+            '<i class="fa-solid fa-hard-drive"></i> Setup Local Mode',
+            `Switch from Cloud Sync (ID: <strong>${maskId(NPOINT_ID)}</strong>) to Local Device Mode?<br><span style="font-size: 12px; color: var(--text-muted);">Your loans will remain safely stored on this device. You can reconnect to cloud sync anytime.</span>`,
+            "Switch to Local",
+            "btn-primary",
+            () => {
+                localStorage.removeItem("emicycle_saved_bin_id");
+                NPOINT_ID = null;
+                API_URL = null;
+                if (window.location.search || window.location.hash) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+                updateSyncBadge("local");
+                render();
+                showToast('<i class="fa-solid fa-hard-drive"></i> Switched to Local Device Mode', "info");
+            }
+        );
     } else {
         openSyncModal();
     }
@@ -185,7 +202,7 @@ function handleSyncActionClick() {
 
 function handleSyncBadgeClick() {
     if (NPOINT_ID) {
-        fetchCloudData();
+        fetchCloudData(true);
     } else {
         openSyncModal();
     }
@@ -250,7 +267,7 @@ function handleSyncFormSubmit(e) {
 }
 
 // Data Load & Cloud Sync Operations
-function fetchCloudData() {
+function fetchCloudData(isManual = false) {
     // If no cloud ID is specified, operate strictly from local browser storage
     if (!API_URL) {
         let localData = JSON.parse(localStorage.getItem("loanEMIData") || "null");
@@ -260,7 +277,7 @@ function fetchCloudData() {
         return;
     }
 
-    updateSyncBadge("syncing", "Connecting...");
+    updateSyncBadge("syncing", "Syncing...");
 
     fetch(API_URL + "?t=" + Date.now(), { cache: "no-store" })
         .then(res => res.json())
@@ -274,12 +291,18 @@ function fetchCloudData() {
             }
             updateSyncBadge("synced");
             render();
+            if (isManual) {
+                showToast('<i class="fa-solid fa-cloud-arrow-up"></i> Synced with Cloud successfully', "success");
+            }
         })
         .catch(err => {
             updateSyncBadge("offline", "Offline Mode");
             let localData = JSON.parse(localStorage.getItem("loanEMIData") || "null");
             loans = (Array.isArray(localData)) ? localData : [];
             render();
+            if (isManual) {
+                showToast('<i class="fa-solid fa-cloud-slash"></i> Offline mode: loaded local records', "warning");
+            }
         });
 }
 
@@ -704,7 +727,7 @@ function renderLoans() {
         const totalValue = Number(l.emi || 0) * currentRemaining;
 
         return `
-        <div class="loan-card-item">
+        <div class="loan-card-item" id="loanCard-${i}">
             <div class="loan-card-header">
                 <span class="loan-card-title"><i class="fa-solid fa-receipt"></i> ${esc(l.name)}</span>
                 <span class="due-pill"><i class="fa-regular fa-calendar-check"></i> Due: ${l.due}${suffix}</span>
@@ -874,12 +897,66 @@ function removeLoan(i) {
         "Yes, Delete",
         "btn-danger",
         () => {
-            historyStack.push(JSON.parse(JSON.stringify(loans)));
-            loans.splice(i, 1);
-            save(false);
-            showToast('<i class="fa-solid fa-trash-can"></i> Loan deleted', "info");
+            const cardEl = document.getElementById(`loanCard-${i}`);
+            if (cardEl) {
+                cardEl.classList.add("loan-card-deleting");
+                setTimeout(() => {
+                    historyStack.push(JSON.parse(JSON.stringify(loans)));
+                    loans.splice(i, 1);
+                    save(false);
+                    showToast('<i class="fa-solid fa-trash-can"></i> Loan deleted', "info");
+                }, 300);
+            } else {
+                historyStack.push(JSON.parse(JSON.stringify(loans)));
+                loans.splice(i, 1);
+                save(false);
+                showToast('<i class="fa-solid fa-trash-can"></i> Loan deleted', "info");
+            }
         }
     );
+}
+
+// Check for Updates and Purge Cache (like Ctrl + F5)
+async function checkForUpdates() {
+    const btn = document.getElementById("checkUpdateBtn");
+    if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin"></i> Checking...';
+        btn.disabled = true;
+    }
+    showToast('<i class="fa-solid fa-arrows-rotate fa-spin"></i> Checking for updates & clearing cache...', "info");
+
+    try {
+        // 1. Purge CacheStorage (assets cached by service worker)
+        if ('caches' in window) {
+            const cacheKeys = await caches.keys();
+            await Promise.all(cacheKeys.map(k => caches.delete(k)));
+            console.log('CacheStorage cleared:', cacheKeys);
+        }
+
+        // 2. Clear Session storage (preserve localStorage so loans and sync ID remain intact)
+        sessionStorage.clear();
+
+        // 3. Update Service Worker registrations
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (let reg of registrations) {
+                try {
+                    await reg.update();
+                } catch (e) {
+                    console.warn("SW update error:", e);
+                }
+            }
+        }
+    } catch (err) {
+        console.warn("Check updates error:", err);
+    }
+
+    // 4. Force hard reload with timestamp query param (Ctrl+F5 equivalent)
+    setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.set("_reload", Date.now().toString());
+        window.location.href = url.toString();
+    }, 600);
 }
 
 function resetData() {

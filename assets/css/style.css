@@ -350,7 +350,7 @@ body {
 /* Actions Toolbar */
 .actions {
     display: flex;
-    gap: 6px;
+    gap: 5px;
     margin-bottom: 2px;
     flex-wrap: nowrap;
 }
@@ -358,17 +358,18 @@ body {
 .btn {
     border: 0;
     border-radius: 10px;
-    padding: 9px 10px;
+    padding: 8px 6px;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 11.5px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 3px;
     transition: transform 0.1s ease, background-color 0.15s ease, opacity 0.2s ease;
     flex: 1;
     white-space: nowrap;
+    letter-spacing: -0.2px;
 }
 
 .btn:active {
@@ -635,6 +636,28 @@ body {
     border: 1px solid var(--border);
     margin-bottom: 12px;
     box-shadow: 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+    transition: transform 0.32s cubic-bezier(0.2, 0, 0, 1),
+                opacity 0.28s ease,
+                max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+                margin 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+                padding 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.25s ease;
+    max-height: 280px;
+    overflow: hidden;
+    will-change: transform, opacity, max-height;
+}
+
+.loan-card-item.loan-card-deleting {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+    max-height: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    border-width: 0 !important;
+    border-color: transparent !important;
+    pointer-events: none;
 }
 
 .loan-card-header {

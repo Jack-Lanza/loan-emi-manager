@@ -85,15 +85,16 @@
                 </div>
             </section>
 
-            <!-- Actions Toolbar: Add | Undo | Setup/Sync | Clear -->
+            <!-- Actions Toolbar: Add | Undo | Setup Sync/Local | Check Update -->
             <nav class="actions">
                 <button class="btn btn-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add</button>
                 <button class="btn btn-secondary" onclick="undoAction()" id="undoBtn" disabled style="opacity:0.5"><i
                         class="fa-solid fa-rotate-left"></i> Undo</button>
                 <button class="btn btn-secondary" id="syncActionBtn" onclick="handleSyncActionClick()"><i
                         class="fa-solid fa-cloud"></i> Setup Sync</button>
-                <button class="btn btn-danger" onclick="resetData()"><i class="fa-solid fa-trash-can"></i>
-                    Clear</button>
+                <button class="btn btn-secondary" id="checkUpdateBtn" onclick="checkForUpdates()"
+                    title="Clear cache & reload latest app version"><i class="fa-solid fa-arrows-rotate"></i>
+                    Check Update</button>
             </nav>
 
             <!-- View Tabs: Due Schedule & My Loans -->
