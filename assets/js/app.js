@@ -208,6 +208,52 @@ function handleSyncBadgeClick() {
     }
 }
 
+// Automatic Monthly Cycle Reset (Runs on 1st of every month or app launch/sync)
+function processMonthlyCycleReset(loansList) {
+    if (!Array.isArray(loansList) || loansList.length === 0) return false;
+
+    const now = new Date();
+    const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const currentMonthName = now.toLocaleDateString('en-GB', { month: 'short' }).toLowerCase();
+    let modified = false;
+
+    loansList.forEach(l => {
+        if (l.paidStatus === undefined) {
+            l.paidStatus = null;
+        }
+
+        if (l.paidStatus) {
+            let isPaidInCurrentMonth = false;
+
+            if (l.paidMonth) {
+                if (l.paidMonth === currentYearMonth) {
+                    isPaidInCurrentMonth = true;
+                }
+            } else if (typeof l.paidStatus === 'string') {
+                const lowerStr = l.paidStatus.toLowerCase();
+                const parts = lowerStr.split(/[\s,/-]+/);
+                if (parts.includes(currentMonthName)) {
+                    isPaidInCurrentMonth = true;
+                    l.paidMonth = currentYearMonth;
+                }
+            }
+
+            // If the payment was recorded in a previous month cycle, reset it to null for the new month
+            if (!isPaidInCurrentMonth) {
+                l.paidStatus = null;
+                l.paidMonth = null;
+                modified = true;
+            }
+        }
+    });
+
+    if (modified) {
+        showToast('<i class="fa-regular fa-calendar-check"></i> New month cycle started! EMI list updated for this month.', "info");
+    }
+
+    return modified;
+}
+
 function handleSyncFormSubmit(e) {
     if (e) e.preventDefault();
     const input = document.getElementById("inputBinId");
@@ -236,7 +282,9 @@ function handleSyncFormSubmit(e) {
                 // Load existing loans from cloud
                 loans = data.loans;
                 loans.forEach(l => { if (l.paidStatus === undefined) l.paidStatus = null; });
+                const wasReset = processMonthlyCycleReset(loans);
                 localStorage.setItem("loanEMIData", JSON.stringify(loans));
+                if (wasReset) save(false);
             } else if (loans.length > 0) {
                 // If cloud is empty but user had local loans, upload local loans to cloud
                 save(false);
@@ -272,8 +320,13 @@ function fetchCloudData(isManual = false) {
     if (!API_URL) {
         let localData = JSON.parse(localStorage.getItem("loanEMIData") || "null");
         loans = (Array.isArray(localData)) ? localData : [];
-        updateSyncBadge("local");
-        render();
+        const wasReset = processMonthlyCycleReset(loans);
+        if (wasReset) {
+            save(false);
+        } else {
+            updateSyncBadge("local");
+            render();
+        }
         return;
     }
 
@@ -285,7 +338,11 @@ function fetchCloudData(isManual = false) {
             if (data && Array.isArray(data.loans)) {
                 loans = data.loans;
                 loans.forEach(l => { if (l.paidStatus === undefined) l.paidStatus = null; });
+                const wasReset = processMonthlyCycleReset(loans);
                 localStorage.setItem("loanEMIData", JSON.stringify(loans));
+                if (wasReset) {
+                    save(false);
+                }
             } else {
                 loans = [];
             }
@@ -299,6 +356,10 @@ function fetchCloudData(isManual = false) {
             updateSyncBadge("offline", "Offline Mode");
             let localData = JSON.parse(localStorage.getItem("loanEMIData") || "null");
             loans = (Array.isArray(localData)) ? localData : [];
+            const wasReset = processMonthlyCycleReset(loans);
+            if (wasReset) {
+                save(false);
+            }
             render();
             if (isManual) {
                 showToast('<i class="fa-solid fa-cloud-slash"></i> Offline mode: loaded local records', "warning");
@@ -407,7 +468,9 @@ function payEmiByOriginalIndex(i, btnEl = null) {
 
         loans[i].remaining -= 1;
         const options = { day: 'numeric', month: 'short' };
-        loans[i].paidStatus = new Date().toLocaleDateString('en-GB', options);
+        const now = new Date();
+        loans[i].paidStatus = now.toLocaleDateString('en-GB', options);
+        loans[i].paidMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
         recentlyPaidIndex = i;
         save(false);
@@ -880,7 +943,8 @@ function handleLoanFormSubmit(e) {
             totalTenure: remainingVal,
             emi: emiVal,
             due: dueVal,
-            paidStatus: null
+            paidStatus: null,
+            paidMonth: null
         });
         showToast('<i class="fa-solid fa-circle-plus"></i> Loan added successfully', "success");
     }
@@ -1020,6 +1084,9 @@ document.getElementById("confirmModal").addEventListener("click", e => {
 // App Initialization
 document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
+        if (processMonthlyCycleReset(loans)) {
+            save(false);
+        }
         checkAndSendDueNotifications();
     }
 });
